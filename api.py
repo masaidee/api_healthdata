@@ -85,12 +85,13 @@ def get_healthdata():
     payload = req.get('payload')
 
     if payload and isinstance(payload, list) and len(payload) > 0:
-        # Sort the payload by clinicdate in descending order
         sorted_payload = sorted(payload, key=lambda x: x.get('clinicdate', ''), reverse=True)
         latest_item = sorted_payload[0]
         healthdata = latest_item.get('healthdata')
 
-        all_data = []
+        # ตรวจสอบว่า healthdata มีค่าหรือไม่
+        if not healthdata:
+            return "ข้อมูลสุขภาพไม่ครบถ้วน", None, None, None, None, None, None, None, None, None, None
 
         # ดึงค่าจาก healthdata
         age = healthdata.get('age', {}).get('value', "") or ""
@@ -104,7 +105,14 @@ def get_healthdata():
         hba1c1 = healthdata.get('hba1c1', {}).get('value', "") or ""
         his = healthdata.get('his', {}).get('value', "") or ""
 
-        # Convert values to appropriate types
+        print(f"aage: {age}, bmi1: {bmi1}, visceralfat1: {visceralfat1}, wrcis1: {wrcis1}, ht: {ht}, sbp1: {sbp1}, dbp1: {dbp1}, fbs1: {fbs1}, hba1c1: {hba1c1}, his: {his}")
+       
+        # ตรวจสอบว่าข้อมูลสำคัญครบหรือไม่
+        required_values = [age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his]
+        if any(v in ["", None] for v in required_values):
+            return "ข้อมูลสุขภาพไม่ครบถ้วน",age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his
+
+        # แปลงค่าข้อมูลเป็น float/int
         age = float(age) if age else 0.0
         bmi1 = float(bmi1) if bmi1 else 0.0
         visceralfat1 = float(visceralfat1) if visceralfat1 else 0.0
@@ -116,18 +124,11 @@ def get_healthdata():
         hba1c1 = float(hba1c1) if hba1c1 else 0.0
         his = int(his) if his else 0
 
-        # เก็บค่าไว้ใน list
-        all_data = [[age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his]]
-        # input_data = [[age, bmi, visceral, wc, ht, sbp, dbp, fbs, HbAlc, family_his]]
-        # print("Input data:", input_data)
-
-        # แทนค่าที่เป็น "" หรือ None ด้วย 0.0 และแปลงเป็น float
-        cleaned_array = [float(x) if x not in ["", None] else 0.0 for x in all_data[0]]
-
         # แปลงเป็น NumPy array
+        cleaned_array = [float(x) if x not in ["", None] else 0.0 for x in [age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his]]
         array_np = np.asarray([cleaned_array], dtype=np.float64)
-
-        # ทำนายผลลัพธ์
+        print(f"array{array_np}")
+        # ทำนายผล
         prediction = Diabetes_classifier.predict(array_np)
 
         # กำหนดข้อความผลลัพธ์
@@ -138,33 +139,71 @@ def get_healthdata():
         else:
             reply_text = "ความเสี่ยงสูง"
 
-        print("All Data:", all_data)
-        print("Cleaned Array:", cleaned_array)
-        print("Prediction:", prediction)
-        print("Result:", reply_text)
-
         return reply_text, age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his
+
     else:
-        print("Payload not found or is not a list")
-        return ("Payload not found or is not a list", 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0)
+        return "Payload not found or is not a list", None, None, None, None, None, None, None, None, None, None
+
 
 def send_diabetes():
     req = request.get_json(silent=True, force=True)
     user = req['originalDetectIntentRequest']['payload']['data']['source']['userId']
 
     reply_text, age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his = get_healthdata()
+
+    if reply_text == "ข้อมูลสุขภาพไม่ครบถ้วน" or reply_text == "Payload not found or is not a list":
+        headers = {
+            "Authorization": f"Bearer {LINE_ACCESS_TOKEN}",
+            "Content-Type": "application/json"
+        }
+
+        # Identify missing data
+        missing_data = []
+        if age == "":
+            missing_data.append("อายุ")
+        if bmi1 == "":
+            missing_data.append("BMI")
+        if visceralfat1 == "":
+            missing_data.append("ไขมันในช่องท้อง")
+        if wrcis1 == "":
+            missing_data.append("อัตราส่วนเอวต่อสะโพก")
+        if ht == "":
+            missing_data.append("ประวัติความดันโลหิตสูง")
+        if sbp1 == "":
+            missing_data.append("ความดันโลหิตตัวบน")
+        if dbp1 == "":
+            missing_data.append("ความดันโลหิตตัวล่าง")
+        if fbs1 == "":
+            missing_data.append("ระดับน้ำตาลในเลือดขณะอดอาหาร")
+        if hba1c1 == "":
+            missing_data.append("ระดับน้ำตาลสะสม")
+        if his == "":
+            missing_data.append("ประวัติครอบครัว")
+
+        print(f"age: {age}, bmi1: {bmi1}, visceralfat1: {visceralfat1}, wrcis1: {wrcis1}, ht: {ht}, sbp1: {sbp1}, dbp1: {dbp1}, fbs1: {fbs1}, hba1c1: {hba1c1}, his: {his}")
+        print(f"missing_data: {missing_data}")
+
+        message_text = f"ไม่สามารถประเมินความเสี่ยงได้ เนื่องจากข้อมูลสุขภาพของคุณไม่ครบถ้วน \n({', '.join(missing_data)}) \nกรุณาอัปเดตข้อมูลของคุณ"
+
+        payload = {
+            "to": user,
+            "messages": [{"type": "text", "text": message_text}]
+        }
+
+        response = requests.post(LINE_API_URL, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            return {"status": "error", "message": "ข้อมูลสุขภาพไม่ครบถ้วน"}
+        else:
+            return {"status": "error", "message": f"เกิดข้อผิดพลาดในการส่งข้อความ: {response.status_code}, {response.text}"}
+
+    # **ดำเนินการต่อเฉพาะเมื่อข้อมูลครบถ้วน**
     headers = {
         "Authorization": f"Bearer {LINE_ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
 
-    if reply_text == "ความเสี่ยงต่ำ":
-        reply_text_color = "#008000"  # สีเขียว
-    elif reply_text == "ความเสี่ยงปานกลาง":
-        reply_text_color = "#FFD700"  # ฟอนต์สีเหลืองทอง
-    else:
-        reply_text_color = "#FF0000"  # สีแดงถ้า 
-
+    # Define colors based on health data
     colors = {
         "bmi": "#008000" if bmi1 < 24.9 else "#FF0000",
         "visceral": "#008000" if visceralfat1 < 9 else "#FF0000",
@@ -186,46 +225,34 @@ def send_diabetes():
     else:
         recommendations.append("- ด้วยมีโอกาสสูงมากที่จะเกิดโรคเบาหวานในอนาคต ควรควบคุมอาหารอย่างเคร่งครัดโดยเฉพาะเกี่ยวกับปริมาณคาร์โบไฮเดรตหรือคาร์บในอาหารซึ่งเป็นสารอาหารที่มีผลต่อระดับตาลในเลือด มากที่สุดเมื่อเทียบกับสารอาหารชนิดอื่น ๆมากที่สุดเมื่อเทียบกับสารอาหารชนิดอื่น ๆ ออกกำลังกายอย่างสม่ำเสมอ ควบคุมน้ำหนักตัวให้อยู่ในเกณฑ์ปกติ ความันโลหิตไม่ควรเกิน 140/90 มม.ปรอท และตรวจติดตามระดับน้ำตาลในเลือดอย่างน้อยปีละ 1 ครั้ง ทุกปี")
 
-    print(type(recommendations))
-    print(f"a{recommendations}")
+    # ตรวจสอบและสร้างข้อความสำหรับ Flex Message
+    Flex_message = []
+    predict = flex_predict_diabetes(reply_text, "#008000" if reply_text == "ความเสี่ยงต่ำ" else "#FFD700" if reply_text == "ความเสี่ยงปานกลาง" else "#FF0000")
+    if predict:
+        Flex_message.append(predict)
 
-    Flex_message = []    
+    analysis_data = flex_analysis_data_diabetes(age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his, colors)
+    if analysis_data:
+        Flex_message.append(analysis_data)
 
-    if reply_text:
-        # เพิ่มข้อความการวิเคราะห์ความเสี่ยง
-        predict = flex_predict_diabetes(reply_text, reply_text_color)
-        if predict:  # ตรวจสอบว่า message ถูกสร้างและไม่ว่างเปล่า
-            Flex_message.append(predict)
+    recommendations = flex_recommendations_diabetes(recommendations)
+    if recommendations:
+        Flex_message.append(recommendations)
 
-        # เพิ่มข้อความการวิเคราะห์ข้อมูล
-        analysis_data = flex_analysis_data_diabetes(age, bmi1, visceralfat1, wrcis1, ht, sbp1, dbp1, fbs1, hba1c1, his, colors)
-        if analysis_data:
-            Flex_message.append(analysis_data)
-
-        # เพิ่มข้อความคำแนะนำ
-        recommendations = flex_recommendations_diabetes(recommendations)
-        if recommendations:
-            Flex_message.append(recommendations)
-
-    # ตรวจสอบว่ามีข้อความใน Flex_message ก่อนสร้าง payload
     if Flex_message:
         payload = {
             "to": user,
             "messages": Flex_message
         }
-        # ส่งข้อมูลไปยัง LINE API
         response = requests.post(LINE_API_URL, headers=headers, json=payload)
 
-        # ตรวจสอบผลลัพธ์
         if response.status_code == 200:
-            print("ส่งข้อความสำเร็จโรคเบาหวาน")
             return {"status": "success", "message": "ส่งข้อความสำเร็จโรคเบาหวาน"}
         else:
-            print(f"เกิดข้อผิดพลาดในการส่งข้อความ: {response.status_code}, {response.text}")
             return {"status": "error", "message": f"เกิดข้อผิดพลาดในการส่งข้อความ: {response.status_code}, {response.text}"}
     else:
-        print("ไม่มีข้อความที่ต้องส่ง")
         return {"status": "error", "message": "ไม่มีข้อความที่ต้องส่ง"}
+
     
 
 
