@@ -1,0 +1,10 @@
+curl --location 'https://api.myhealthgroup.net/apiservice/line/getUserHealth' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer 32a9fcf38fb1aebaed' \
+--data '{
+    "userId":"userd647b6fc4828645341e71a8fa302b22c"
+}'
+
+user1645ac833f9e753ea4698578c6ec2cdb
+
+Uac18cd26e5c19c3febba3e4553a97d8a
