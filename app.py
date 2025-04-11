@@ -1,6 +1,4 @@
-import httpx
 from flask import Flask, request, jsonify
-import numpy as np
 import requests
 from payload import (
 
