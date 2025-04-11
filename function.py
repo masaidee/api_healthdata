@@ -36,15 +36,15 @@ def data_stroke():
 
 
         sbp = healthdata.get('sbp', {}).get('value', "") or ""
-        dbp = healthdata.get('dbp', {}).get('value', "") or "10"
-        his = healthdata.get('his', {}).get('value', "") or "10"
-        smoke = healthdata.get('smoke', {}).get('value', "") or "10"
-        fbs = healthdata.get('fbs', {}).get('value', "") or "10"
-        HbAlc = healthdata.get('HbAlc', {}).get('value', "") or "10"
-        total_Cholesterol = healthdata.get('total_Cholesterol', {}).get('value', "") or "10"
-        Exe = healthdata.get('Exe', {}).get('value', "") or "10"
-        bmi = healthdata.get('bmi', {}).get('value', "") or "10"
-        family_his = healthdata.get('family_his', {}).get('value', "") or "10"
+        dbp = healthdata.get('dbp', {}).get('value', "") or ""
+        his = healthdata.get('his', {}).get('value', "") or ""
+        smoke = healthdata.get('smoke', {}).get('value', "") or ""
+        fbs = healthdata.get('fbs', {}).get('value', "") or ""
+        HbAlc = healthdata.get('HbAlc', {}).get('value', "") or ""
+        total_Cholesterol = healthdata.get('total_Cholesterol', {}).get('value', "") or ""
+        Exe = healthdata.get('Exe', {}).get('value', "") or ""
+        bmi = healthdata.get('bmi', {}).get('value', "") or ""
+        family_his = healthdata.get('family_his', {}).get('value', "") or ""
 
 
         # ตรวจสอบว่าข้อมูลสำคัญครบหรือไม่
@@ -107,7 +107,7 @@ def data_bloodfat():
             return "ข้อมูลสุขภาพไม่ครบถ้วน", None, None, None, None, None, None, None
 
         # ดึงค่าจาก healthdata สำหรับไขมันในเลือด
-        Gender = healthdata.get('gender', {}).get('value', "") or "12"
+        Gender = healthdata.get('gender', {}).get('value', "") or ""
         Weight = healthdata.get('weight', {}).get('value', "") or ""
         Height = healthdata.get('height', {}).get('value', "") or ""
         Cholesterol = healthdata.get('cholesterol', {}).get('value', "") or ""
@@ -175,16 +175,16 @@ def data_diabetes():
             return "ข้อมูลสุขภาพไม่ครบถ้วน", None, None, None, None, None, None, None, None, None, None
 
         # ดึงค่าจาก healthdata
-        age = healthdata.get('age', {}).get('value', "") or "10"
-        bmi1 = healthdata.get('bmi1', {}).get('value', "") or "10"
-        visceralfat1 = healthdata.get('visceralfat1', {}).get('value', "") or "10"
-        wrcis1 = healthdata.get('wrcis1', {}).get('value', "") or "10"
-        ht = healthdata.get('ht', {}).get('value', "") or "10"
+        age = healthdata.get('age', {}).get('value', "") or ""
+        bmi1 = healthdata.get('bmi1', {}).get('value', "") or ""
+        visceralfat1 = healthdata.get('visceralfat1', {}).get('value', "") or ""
+        wrcis1 = healthdata.get('wrcis1', {}).get('value', "") or ""
+        ht = healthdata.get('ht', {}).get('value', "") or ""
         sbp1 = healthdata.get('sbp1', {}).get('value', "") or ""
         dbp1 = healthdata.get('dbp1', {}).get('value', "") or ""
         fbs1 = healthdata.get('fbs1', {}).get('value', "") or ""
-        hba1c1 = healthdata.get('hba1c1', {}).get('value', "") or "10"
-        his = healthdata.get('his', {}).get('value', "") or "10"
+        hba1c1 = healthdata.get('hba1c1', {}).get('value', "") or ""
+        his = healthdata.get('his', {}).get('value', "") or ""
 
         print(f"age: {age}, bmi1: {bmi1}, visceralfat1: {visceralfat1}, wrcis1: {wrcis1}, ht: {ht}, sbp1: {sbp1}, dbp1: {dbp1}, fbs1: {fbs1}, hba1c1: {hba1c1}, his: {his}")
        
