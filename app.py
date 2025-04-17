@@ -17,7 +17,11 @@ from payload import (
 from function import(
     data_diabetes,
     data_bloodfat,
-    data_stroke
+    data_stroke,
+
+    get_userid
+
+
 ) 
 
 app = Flask(__name__)
@@ -26,13 +30,13 @@ app = Flask(__name__)
 
 LINE_API_URL = "https://api.line.me/v2/bot/message/push"
 #myhealth
-LINE_ACCESS_TOKEN = "1x3tE+qWFFWfG2wxF3B8iemgo4N9PSNxQ9pkXc66w+cq00iPoCgxq1XdHOVZHl+sgeWzO5TtQvYp8z/LgvUlwHrVWBCC9zp+FJrJGHeT9NoMJ9OQvpGDXAsYOuEYMRA/53Q0qkOCkRuiMa4VTENihAdB04t89/1O/w1cDnyilFU="
+# LINE_ACCESS_TOKEN = "1x3tE+qWFFWfG2wxF3B8iemgo4N9PSNxQ9pkXc66w+cq00iPoCgxq1XdHOVZHl+sgeWzO5TtQvYp8z/LgvUlwHrVWBCC9zp+FJrJGHeT9NoMJ9OQvpGDXAsYOuEYMRA/53Q0qkOCkRuiMa4VTENihAdB04t89/1O/w1cDnyilFU="
 #sipsinse
 # LINE_ACCESS_TOKEN = "NeXMAZt6QoDOwz7ryhruPZ0xrkfHbWPhQVvA9mLII8Y0CAeOTB7zXUGhzs8Q6JhT8ntAKAilCJQKjE/6rTfonbVRFTLkg7WL8rtzfHisWYBLbOCc6jkx6iePMA1VNJuqN/0B05f3+jq8d2nOeFnGQgdB04t89/1O/w1cDnyilFU="
 # ้health
 # LINE_ACCESS_TOKEN = "+mxXTWUhft/lds9sjCQLThOE7hSpYYa3Qc9Ex8f+/7NNB6075OpjZ0jIC/83ABlncS0BObm5K+8oDnHck6sKcILblYZv9AUU8TllWdaHWHWIE8Cp9Z1ybS0jfzi5iF6hDwggWQurGYX93oAOwwr9CQdB04t89/1O/w1cDnyilFU="
 # healthgroup
-# LINE_ACCESS_TOKEN = "dlmMJIDuAnFTOrIxt1IjvGRihrCyyINAXB2QaTDGEUaikjefh2dZ7CFOk3hpBGSXNqCClqCGkeMULxN3tfC4DAYl/5c15dL1rTEhZ9AwyF7XSx2A7Cs4/pJhlQQWISwT2bWsyzxc9lxK8vDbAj8YnAdB04t89/1O/w1cDnyilFU="
+LINE_ACCESS_TOKEN = "dlmMJIDuAnFTOrIxt1IjvGRihrCyyINAXB2QaTDGEUaikjefh2dZ7CFOk3hpBGSXNqCClqCGkeMULxN3tfC4DAYl/5c15dL1rTEhZ9AwyF7XSx2A7Cs4/pJhlQQWISwT2bWsyzxc9lxK8vDbAj8YnAdB04t89/1O/w1cDnyilFU="
 
 
 
@@ -65,8 +69,10 @@ def generating_answer(question_from_dailogflow_raw):
         answer_str = send_diabetes()
     elif intent_name == 'Check - Bloodfat': #
         answer_str = send_bloodfat()
-    elif intent_name == 'Check - Stroke': #
+    elif intent_name == 'Check - Stroke': #         
         answer_str = send_stroke()
+    elif intent_name == 'GetUserId': #
+        answer_str = get_user()
     else:
         # ถ้า intent_name ไม่ตรงกับเงื่อนไขที่กำหนด ให้ใช้ฟังก์ชัน find_best_match_with_fuzzy
         answer_str = "ขอโทษครับ ฉันไม่เข้าใจคำถามของคุณ"
@@ -390,14 +396,29 @@ def send_diabetes():
         return {"status": "error", "message": "ไม่มีข้อความที่ต้องส่ง"}
 
     
-
-
-# @app.get("/healthdata")
-# def get():
-#     all = get_healthdata()
-#     print(all)
-#     return {"healthdatafull": all}
+def send_userid():
+    # req = request.get_json(silent=True, force=True)
+    # user = req['originalDetectIntentRequest']['payload']['data']['source']['userId']
+    userid = get_userid()
+    headers = {
+        "Authorization": f"Bearer {LINE_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    
+    message_text = f"Your user ID is: {userid}"
+    
+    payload = {
+        "to": userid,
+        "messages": [{"type": "text", "text": message_text}]
+    }
+    
+    response = requests.post(LINE_API_URL, headers=headers, json=payload)
+    
+    if response.status_code == 200:
+        return {"status": "success", "message": "User ID sent successfully"}
+    else:
+        return {"status": "error", "message": f"Error sending message: {response.status_code}, {response.text}"}
 
     
 if __name__ == "__main__":
-    app.run(port=8000)
+    app.run(port=3000)  # เปลี่ยนพอร์ตเป็น 5000 หรือพอร์ตอื่นที่ว่าง
