@@ -3,3 +3,7 @@ pillow
 pytesseract
 deepface
 tf-keras
+numpy
+scikit-learn
+joblib
+scipy
